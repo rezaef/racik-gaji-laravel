@@ -41,6 +41,9 @@ return [
 
     'debug' => (bool) env('APP_DEBUG', false),
 
+    // Login satu klik per role untuk presentasi; matikan di produksi.
+    'demo_switcher' => (bool) env('APP_DEMO_SWITCHER', false),
+
     /*
     |--------------------------------------------------------------------------
     | Application URL
@@ -65,7 +68,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => 'Asia/Jakarta',
 
     /*
     |--------------------------------------------------------------------------

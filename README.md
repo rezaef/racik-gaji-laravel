@@ -1,58 +1,83 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# RacikHRIS
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+HRIS & payroll otomatis untuk **PT Racik Solusi Teknologi** (Jl. Sidowaras No.35, Gresik).
+Laravel 13 · Sanctum · DomPDF · SQLite (dev) / MySQL / PostgreSQL.
 
-## About Laravel
+- Backend: Reza Eka Firmansyah (1202230015)
+- Frontend: Muhammad Febriano Aldo Syahputra (1202230021)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Setup
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
-```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+```sh
+composer install
+cp .env.example .env && php artisan key:generate
+touch database/database.sqlite
+php artisan migrate:fresh --seed
+php artisan serve        # http://127.0.0.1:8000
+php artisan test
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Untuk MySQL/PostgreSQL ubah `DB_*` di `.env`. Matikan `APP_DEMO_SWITCHER` di produksi.
 
-## Contributing
+## Akun demo (password: `password`)
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+| Role | Email | Akses |
+|---|---|---|
+| HR Admin | dewi.lestari@racik.test | master data, payroll, semua data |
+| Manager (Tech Lead) | syaiful.akbar@racik.test | approval cuti/lembur/koreksi tim |
+| Employee | reza.eka@racik.test | clock-in/out, pengajuan, slip gaji |
 
-## Code of Conduct
+Role switcher: `GET /api/auth/demo-accounts`, `POST /api/auth/demo-login {"role": "hr_admin|manager|employee"}`.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## API (semua `/api`, kecuali auth pakai `Authorization: Bearer <token>`)
 
-## Security Vulnerabilities
+| Method | Endpoint | Role |
+|---|---|---|
+| POST | `/auth/login`, `/auth/demo-login` | publik |
+| GET/POST | `/auth/me`, `/auth/logout` | login |
+| GET / PUT | `/company` | login / HR |
+| GET | `/employees` | HR, manager |
+| POST/GET/PUT/DELETE | `/employees[/{id}]` | HR (DELETE = nonaktifkan) |
+| GET | `/attendances?month=YYYY-MM&mode=&employee_id=` | scoped per role |
+| GET | `/attendances/today` | login |
+| POST | `/attendances/clock-in {mode: WFO\|WFH\|CLIENT_SITE, client_name?}` · `/attendances/clock-out` | login |
+| GET/POST | `/leave-requests`, `/overtime-requests`, `/attendance-corrections` | login |
+| POST | `/{leave-requests\|overtime-requests\|attendance-corrections}/{id}/approve\|reject` | manager, HR |
+| GET | `/payroll/periods`, `/payroll/periods/{id}` | HR |
+| POST | `/payroll/generate {year, month}` | HR |
+| POST | `/payroll/periods/{id}/finalize`, `/mark-paid` | HR |
+| GET | `/payroll/periods/{id}/export` (CSV rekap bank) | HR |
+| GET | `/payslips/mine`, `/payslips/{id}`, `/payslips/{id}/pdf` | karyawan (periode final), HR |
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Data per role: karyawan melihat dirinya, manager melihat timnya, HR melihat semua.
 
-## License
+## Aturan payroll (`config/payroll.php`)
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- Bruto = gaji pokok + tunjangan tetap + (makan + transport harian × hari hadir) + lembur.
+- Lembur hari kerja: upah/jam = gaji pokok / 173; jam pertama 1,5×, berikutnya 2× (hanya lembur yang disetujui).
+- BPJS Kesehatan 1% (plafon Rp12 jt), JHT 2%, JP 1% (plafon Rp10.547.400) dari gaji pokok + tunjangan tetap.
+- PPh 21 TER: kategori A/B/C dari status PTKP × tarif bruto bulanan. **Verifikasi tabel TER dengan PMK 168/2023 sebelum dipakai riil.**
+- Telat = clock-in melewati 08:00 + toleransi 15 menit (`company_settings`).
+- Payslip baru terlihat karyawan setelah periode **finalized**; periode final tidak bisa digenerate ulang.
+
+## Alur Git
+
+```sh
+# sekali saja (sudah dibuat): main, develop, feature/backend-api-reza, feature/frontend-aldo
+git remote add origin <url-repo>
+git push -u origin main develop feature/backend-api-reza feature/frontend-aldo
+
+# Reza
+git checkout feature/backend-api-reza
+git add -A && git commit -m "feat(payroll): ..." && git push
+
+# Aldo
+git checkout feature/frontend-aldo
+git pull origin develop           # ambil API terbaru
+git add -A && git commit -m "feat(ui): ..." && git push
+
+# Integrasi: PR feature/* -> develop; rilis akhir: develop -> main
+git checkout develop && git merge --no-ff feature/backend-api-reza
+```
+
+Aturan: backend hanya menyentuh `app/`, `database/`, `routes/`, `config/`, `tests/`; frontend hanya `resources/` dan aset. Konvensi commit: `feat|fix|chore|test|docs(scope): pesan`.
