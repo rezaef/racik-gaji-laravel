@@ -17,7 +17,7 @@ class EmployeeRequest extends FormRequest
             'email' => [$required, 'email', Rule::unique('users', 'email')->ignore($employee?->user_id)],
             'password' => [$employee ? 'sometimes' : 'required', 'string', 'min:8'],
             'role' => [$required, Rule::in(['hr_admin', 'manager', 'employee'])],
-            'employee_number' => [$required, 'string', Rule::unique('employees', 'employee_number')->ignore($employee?->id)],
+            'employee_number' => [$employee ? 'sometimes' : 'nullable', 'string', Rule::unique('employees', 'employee_number')->ignore($employee?->id)],
             'full_name' => [$required, 'string', 'max:150'],
             'position' => [$required, 'string', 'max:100'],
             'department' => [$required, 'string', 'max:100'],

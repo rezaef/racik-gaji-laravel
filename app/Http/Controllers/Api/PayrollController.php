@@ -68,7 +68,7 @@ class PayrollController extends Controller
         return response()->streamDownload(function () use ($period) {
             $out = fopen('php://output', 'w');
             fwrite($out, "\xEF\xBB\xBF"); // BOM agar Excel membaca UTF-8
-            fputcsv($out, ['NIK', 'Nama', 'Bank', 'No Rekening', 'Hari Hadir', 'Gaji Pokok', 'Tunj. Tetap', 'Tunj. Makan', 'Tunj. Transport', 'Lembur', 'Gaji Kotor', 'BPJS Kes', 'JHT', 'JP', 'PPh 21', 'Total Potongan', 'Gaji Bersih']);
+            fputcsv($out, ['No. Karyawan', 'Nama', 'Bank', 'No Rekening', 'Hari Hadir', 'Gaji Pokok', 'Tunj. Tetap', 'Tunj. Makan', 'Tunj. Transport', 'Lembur', 'Gaji Kotor', 'BPJS Kes', 'JHT', 'JP', 'PPh 21', 'Total Potongan', 'Gaji Bersih']);
 
             $period->payslips()->with('employee')->get()->sortBy('employee.full_name')->each(fn ($p) => fputcsv($out, [
                 $p->employee->employee_number, $p->employee->full_name, $p->employee->bank_name, $p->employee->bank_account.' ',

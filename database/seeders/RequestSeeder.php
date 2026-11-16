@@ -7,6 +7,7 @@ use App\Models\AttendanceCorrection;
 use App\Models\Employee;
 use App\Models\LeaveRequest;
 use App\Models\OvertimeRequest;
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 
 class RequestSeeder extends Seeder
@@ -14,19 +15,40 @@ class RequestSeeder extends Seeder
     public function run(): void
     {
         $manager = Employee::where('full_name', 'Syaiful Akbar')->firstOrFail();
-        $prev = now()->subMonthNoOverflow()->startOfMonth();
         $by = fn (string $name) => Employee::where('full_name', 'like', "$name%")->firstOrFail();
 
-        // Cuti disetujui: absensi pada tanggal tersebut ditandai "leave".
-        $leave = LeaveRequest::create([
-            'employee_id' => $by('Siti')->id, 'type' => 'annual',
-            'start_date' => $prev->copy()->addDays(14)->toDateString(), 'end_date' => $prev->copy()->addDays(16)->toDateString(),
-            'days' => 3, 'reason' => 'Acara keluarga di Surabaya', 'status' => 'approved',
-            'reviewed_by' => $manager->id, 'reviewed_at' => $prev->copy()->addDays(10),
-        ]);
-        Attendance::where('employee_id', $leave->employee_id)
-            ->whereBetween('date', [$leave->start_date, $leave->end_date])
-            ->update(['status' => 'leave', 'clock_in' => null, 'clock_out' => null, 'late_minutes' => 0, 'work_minutes' => 0]);
+        // Cuti/sakit disetujui di dua bulan penuh: [nama, jenis, bulan (1 = bulan lalu, 2 = dua bulan lalu), hari ke-, lama hari kerja, alasan]
+        $leaves = [
+            ['Siti', 'annual', 1, 14, 3, 'Acara keluarga di Surabaya'], ['Agus', 'sick', 1, 5, 2, 'Demam dan flu, surat dokter terlampir'],
+            ['Lina', 'annual', 1, 21, 2, 'Mengurus dokumen keluarga'], ['Rizky', 'annual', 1, 9, 1, 'Keperluan pribadi'],
+            ['Maya', 'sick', 1, 17, 1, 'Kontrol dokter'],
+            ['Siti', 'annual', 2, 7, 2, 'Liburan akhir pekan panjang'], ['Nur', 'sick', 2, 14, 1, 'Sakit kepala, istirahat'],
+            ['Putri', 'annual', 2, 20, 3, 'Pernikahan saudara'], ['Hendra', 'annual', 2, 3, 2, 'Mengantar keluarga berobat'],
+        ];
+
+        foreach ($leaves as [$name, $type, $monthsAgo, $offset, $length, $reason]) {
+            $start = now()->subMonthsNoOverflow($monthsAgo)->startOfMonth()->addDays($offset);
+            $start = $start->isWeekend() ? $start->next(Carbon::MONDAY) : $start;
+            $dates = [];
+            for ($d = $start->copy(); count($dates) < $length; $d->addDay()) {
+                if (! $d->isWeekend()) {
+                    $dates[] = $d->copy();
+                }
+            }
+
+            $leave = LeaveRequest::create([
+                'employee_id' => $by($name)->id, 'type' => $type,
+                'start_date' => $dates[0]->toDateString(), 'end_date' => end($dates)->toDateString(),
+                'days' => $length, 'reason' => $reason, 'status' => 'approved',
+                'reviewed_by' => $manager->id, 'reviewed_at' => $dates[0]->copy()->subDays(3),
+            ]);
+
+            foreach ($dates as $d) {
+                $row = Attendance::firstOrNew(['employee_id' => $leave->employee_id, 'date' => $d->toDateString()]);
+                $row->mode ??= 'WFO';
+                $row->fill(['status' => 'leave', 'client_name' => null, 'clock_in' => null, 'clock_out' => null, 'late_minutes' => 0, 'work_minutes' => 0])->save();
+            }
+        }
 
         LeaveRequest::create([
             'employee_id' => $by('Rizky')->id, 'type' => 'sick',
@@ -39,12 +61,23 @@ class RequestSeeder extends Seeder
             'days' => 3, 'reason' => 'Liburan keluarga', 'status' => 'pending',
         ]);
 
-        // Lembur bulan lalu (disetujui, masuk payroll) + beberapa pending.
-        foreach ([['Bagus', 3, 1], ['Agus', 4, 4], ['Bagus', 10, 2], ['Dimas', 11, 3]] as [$name, $offset, $hours]) {
-            $date = $prev->copy()->addDays($offset);
-            $date = $date->isWeekend() ? $date->next('Monday') : $date;
+        // Lembur disetujui (masuk payroll) di dua bulan: [nama, bulan lalu ke-, hari ke-, jam]. Tidak dibuat pada hari cuti.
+        $overtimes = [
+            ['Bagus', 1, 3, 1], ['Agus', 1, 4, 4], ['Bagus', 1, 10, 2], ['Dimas', 1, 11, 3], ['Rizky', 1, 17, 2], ['Putri', 1, 22, 1],
+            ['Bagus', 2, 4, 2], ['Agus', 2, 9, 3], ['Dimas', 2, 15, 2], ['Rizky', 2, 18, 1], ['Nur', 2, 22, 4], ['Siti', 2, 24, 2],
+        ];
+
+        foreach ($overtimes as [$name, $monthsAgo, $offset, $hours]) {
+            $date = now()->subMonthsNoOverflow($monthsAgo)->startOfMonth()->addDays($offset);
+            $date = $date->isWeekend() ? $date->next(Carbon::MONDAY) : $date;
+            $employee = $by($name);
+
+            if (Attendance::where('employee_id', $employee->id)->whereDate('date', $date)->where('status', 'leave')->exists()) {
+                continue;
+            }
+
             OvertimeRequest::create([
-                'employee_id' => $by($name)->id, 'date' => $date->toDateString(),
+                'employee_id' => $employee->id, 'date' => $date->toDateString(),
                 'start_time' => '16:00:00', 'end_time' => sprintf('%02d:00:00', 16 + $hours), 'hours' => $hours,
                 'reason' => 'Deploy dan hotfix produksi', 'status' => 'approved',
                 'reviewed_by' => $manager->id, 'reviewed_at' => $date->copy()->addDay(),

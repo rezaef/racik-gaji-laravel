@@ -15,6 +15,16 @@ class Employee extends Model
         return ['join_date' => 'date'];
     }
 
+    /** Nomor karyawan berikutnya: RG-TAHUN-URUT (urut per tahun masuk). */
+    public static function nextNumber(string $joinDate): string
+    {
+        $year = substr($joinDate, 0, 4);
+        $last = static::where('employee_number', 'like', "RG-$year-%")->max('employee_number');
+        $seq = $last ? ((int) substr($last, -3)) + 1 : 1;
+
+        return sprintf('RG-%s-%03d', $year, $seq);
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

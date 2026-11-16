@@ -34,6 +34,7 @@ class EmployeeController extends Controller
         $data = $request->validated();
 
         $employee = DB::transaction(function () use ($data) {
+            $data['employee_number'] = $data['employee_number'] ?? Employee::nextNumber($data['join_date']);
             $user = User::create([
                 'name' => $data['full_name'], 'email' => $data['email'],
                 'password' => $data['password'], 'role' => $data['role'],

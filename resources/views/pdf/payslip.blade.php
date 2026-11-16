@@ -48,7 +48,7 @@
 
     <h2>Slip Gaji &mdash; {{ $payslip->period->label() }}</h2>
     <table class="info">
-        <tr><td>Nama</td><td>: {{ $e->full_name }}</td><td>NIK Karyawan</td><td>: {{ $e->employee_number }}</td></tr>
+        <tr><td>Nama</td><td>: {{ $e->full_name }}</td><td>No. Karyawan</td><td>: {{ $e->employee_number }}</td></tr>
         <tr><td>Jabatan</td><td>: {{ $e->position }}</td><td>Status PTKP</td><td>: {{ $e->ptkp_status }}</td></tr>
         <tr><td>Departemen</td><td>: {{ $e->department }}</td><td>Hari Hadir</td><td>: {{ $payslip->present_days }} / {{ $payslip->period->working_days }} hari kerja</td></tr>
     </table>

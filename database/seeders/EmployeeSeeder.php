@@ -30,6 +30,7 @@ class EmployeeSeeder extends Seeder
             ['dimas.saputra', 'Dimas Saputra', User::ROLE_EMPLOYEE, 'Data Engineer', 'Engineering', '2024-06-03', 'TK/2', 9_500_000, 1_000_000, 35_000, 25_000],
         ];
 
+        $numbers = $this->employeeNumbers($rows);
         $manager = null;
 
         foreach ($rows as $i => [$slug, $name, $role, $position, $department, $join, $ptkp, $basic, $fixed, $meal, $transport]) {
@@ -40,7 +41,7 @@ class EmployeeSeeder extends Seeder
 
             $employee = Employee::updateOrCreate(['user_id' => $user->id], [
                 'manager_id' => $manager?->id,
-                'employee_number' => sprintf('RST-%s-%03d', substr($join, 0, 4), $i + 1),
+                'employee_number' => $numbers[$slug],
                 'full_name' => $name,
                 'position' => $position,
                 'department' => $department,
@@ -60,5 +61,21 @@ class EmployeeSeeder extends Seeder
             // Syaiful (baris pertama) menjadi atasan seluruh karyawan lain.
             $manager ??= $employee;
         }
+    }
+
+    /** Nomor karyawan format RG-TAHUN-URUT, urutan per tahun mengikuti tanggal masuk. Contoh: RG-2022-003. */
+    private function employeeNumbers(array $rows): array
+    {
+        $sorted = collect($rows)->sortBy(fn ($r) => $r[5].'|'.$r[0])->values();
+        $perYear = [];
+        $numbers = [];
+
+        foreach ($sorted as $r) {
+            $year = substr($r[5], 0, 4);
+            $perYear[$year] = ($perYear[$year] ?? 0) + 1;
+            $numbers[$r[0]] = sprintf('RG-%s-%03d', $year, $perYear[$year]);
+        }
+
+        return $numbers;
     }
 }

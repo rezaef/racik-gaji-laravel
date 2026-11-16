@@ -9,18 +9,18 @@ use Illuminate\Database\Seeder;
 
 class AttendanceSeeder extends Seeder
 {
-    /** Absensi hybrid satu bulan penuh sebelumnya + bulan berjalan sampai kemarin. */
+    /** Absensi hybrid hari kerja (Senin-Jumat): dua bulan penuh sebelumnya + bulan berjalan sampai kemarin. */
     public function run(): void
     {
         mt_srand(20261116); // deterministik agar seed bisa diulang
 
-        $from = now()->subMonthNoOverflow()->startOfMonth();
+        $from = now()->subMonthsNoOverflow(2)->startOfMonth();
         $to = now()->subDay();
 
         foreach (Employee::all() as $employee) {
             for ($date = $from->copy(); $date->lte($to); $date->addDay()) {
-                if ($date->isWeekend() || mt_rand(1, 100) <= 3) {
-                    continue; // akhir pekan atau 3% hari tanpa catatan (mangkir)
+                if ($date->isWeekend() || $date->lt($employee->join_date)) {
+                    continue; // tanpa Sabtu/Minggu dan sebelum tanggal masuk
                 }
 
                 Attendance::updateOrCreate(

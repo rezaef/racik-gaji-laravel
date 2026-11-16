@@ -6,7 +6,10 @@ use App\Models\Employee;
 use App\Models\LeaveRequest;
 use App\Models\User;
 use Carbon\Carbon;
-use Database\Seeders\DatabaseSeeder;
+use Database\Seeders\AttendanceSeeder;
+use Database\Seeders\CompanySettingSeeder;
+use Database\Seeders\EmployeeSeeder;
+use Database\Seeders\RequestSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
@@ -18,7 +21,8 @@ class HrisFlowTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed(DatabaseSeeder::class);
+        // Tanpa PayrollSeeder: test penggajian membuat periodenya sendiri.
+        $this->seed([CompanySettingSeeder::class, EmployeeSeeder::class, AttendanceSeeder::class, RequestSeeder::class]);
     }
 
     private function actAs(string $email): User
@@ -98,5 +102,18 @@ class HrisFlowTest extends TestCase
         $this->getJson("/api/payslips/{$payslip->id}")->assertOk();
         $this->get("/api/payslips/{$payslip->id}/pdf")->assertOk()->assertHeader('content-type', 'application/pdf');
         $this->getJson('/api/payroll/periods')->assertForbidden();
+    }
+
+    public function test_new_employee_gets_sequential_number_from_join_year(): void
+    {
+        $this->actAs('dewi.lestari@racik.test');
+
+        $payload = fn (string $email) => [
+            'email' => $email, 'password' => 'password123', 'role' => 'employee', 'full_name' => 'Calon Baru',
+            'position' => 'Staff', 'department' => 'Finance', 'join_date' => '2025-02-03', 'ptkp_status' => 'TK/0', 'basic_salary' => 5_000_000,
+        ];
+
+        $this->postJson('/api/employees', $payload('baru1@racik.test'))->assertCreated()->assertJsonPath('data.employee_number', 'RG-2025-001');
+        $this->postJson('/api/employees', $payload('baru2@racik.test'))->assertCreated()->assertJsonPath('data.employee_number', 'RG-2025-002');
     }
 }
