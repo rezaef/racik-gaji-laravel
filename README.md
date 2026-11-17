@@ -23,9 +23,9 @@ Untuk MySQL/PostgreSQL ubah `DB_*` di `.env`. Matikan `APP_DEMO_SWITCHER` di pro
 
 | Role | Email | Akses |
 |---|---|---|
-| HR Admin | dewi.lestari@racik.test | master data, payroll, semua data |
-| Manager (Tech Lead) | syaiful.akbar@racik.test | approval cuti/lembur/koreksi tim |
-| Employee | reza.eka@racik.test | clock-in/out, pengajuan, slip gaji |
+| HR Admin | hr@demo.test | master data, payroll, semua data |
+| Manager (Tech Lead) | manager@demo.test | approval cuti/lembur/koreksi tim |
+| Employee | karyawan1@demo.test | clock-in/out, pengajuan, slip gaji |
 
 Role switcher: `GET /api/auth/demo-accounts`, `POST /api/auth/demo-login {"role": "hr_admin|manager|employee"}`.
 

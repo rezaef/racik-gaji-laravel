@@ -18,7 +18,7 @@ class EmployeeController extends Controller
             ->when($request->status, fn ($q, $status) => $q->where('status', $status))
             ->when($request->department, fn ($q, $department) => $q->where('department', $department))
             ->when($request->search, fn ($q, $s) => $q->where(fn ($w) => $w->where('full_name', 'like', "%$s%")->orWhere('employee_number', 'like', "%$s%")))
-            ->orderBy('full_name')
+            ->orderByRaw('length(full_name)')->orderBy('full_name') // Karyawan 2 sebelum Karyawan 10
             ->paginate($request->integer('per_page', 25));
 
         return response()->json($employees);

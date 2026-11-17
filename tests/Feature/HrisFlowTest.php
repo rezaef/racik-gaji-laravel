@@ -36,18 +36,18 @@ class HrisFlowTest extends TestCase
     public function test_seed_has_expected_people(): void
     {
         $this->assertSame(15, Employee::count());
-        $this->assertDatabaseHas('employees', ['full_name' => 'Syaiful Akbar', 'position' => 'Technical Lead']);
+        $this->assertDatabaseHas('employees', ['full_name' => 'Manajer Demo', 'position' => 'Technical Lead']);
     }
 
     public function test_demo_login_issues_token_per_role(): void
     {
         $this->postJson('/api/auth/demo-login', ['role' => 'manager'])
-            ->assertOk()->assertJsonPath('user.name', 'Syaiful Akbar')->assertJsonStructure(['token']);
+            ->assertOk()->assertJsonPath('user.name', 'Manajer Demo')->assertJsonStructure(['token']);
     }
 
     public function test_clock_in_flags_lateness_after_grace_period(): void
     {
-        $this->actAs('yoga.pratama@racik.test');
+        $this->actAs('karyawan11@demo.test');
         Carbon::setTestNow(Carbon::parse('next monday 08:40'));
 
         $this->postJson('/api/attendances/clock-in', ['mode' => 'WFO'])
@@ -59,7 +59,7 @@ class HrisFlowTest extends TestCase
 
     public function test_client_site_requires_client_name(): void
     {
-        $this->actAs('yoga.pratama@racik.test');
+        $this->actAs('karyawan11@demo.test');
 
         $this->postJson('/api/attendances/clock-in', ['mode' => 'CLIENT_SITE'])->assertUnprocessable();
     }
@@ -68,10 +68,10 @@ class HrisFlowTest extends TestCase
     {
         $pending = LeaveRequest::where('status', 'pending')->first();
 
-        $this->actAs('reza.eka@racik.test');
+        $this->actAs('karyawan1@demo.test');
         $this->postJson("/api/leave-requests/{$pending->id}/approve")->assertForbidden();
 
-        $this->actAs('syaiful.akbar@racik.test');
+        $this->actAs('manager@demo.test');
         $this->postJson("/api/leave-requests/{$pending->id}/approve", ['review_note' => 'OK'])
             ->assertOk()->assertJsonPath('data.status', 'approved');
         $this->postJson("/api/leave-requests/{$pending->id}/approve")->assertUnprocessable();
@@ -81,24 +81,24 @@ class HrisFlowTest extends TestCase
     {
         $prev = now()->subMonthNoOverflow();
 
-        $this->actAs('dewi.lestari@racik.test');
+        $this->actAs('hr@demo.test');
         $period = $this->postJson('/api/payroll/generate', ['year' => $prev->year, 'month' => $prev->month])
             ->assertCreated()->assertJsonPath('data.totals.employees', 15)->json('data');
 
         $this->assertGreaterThan(0, $period['totals']['net']);
-        $payslip = Employee::where('full_name', 'like', 'Bagus%')->first()->payslips()->first();
+        $payslip = Employee::where('full_name', 'Karyawan 3')->first()->payslips()->first();
         $this->assertGreaterThan(0, $payslip->overtime_pay); // lembur disetujui masuk payroll
 
         // Draft: karyawan belum boleh melihat slip.
-        $this->actAs('bagus.prasetyo@racik.test');
+        $this->actAs('karyawan3@demo.test');
         $this->getJson("/api/payslips/{$payslip->id}")->assertForbidden();
 
-        $this->actAs('dewi.lestari@racik.test');
+        $this->actAs('hr@demo.test');
         $this->postJson("/api/payroll/periods/{$period['id']}/finalize")->assertOk();
         $this->postJson('/api/payroll/generate', ['year' => $prev->year, 'month' => $prev->month])->assertUnprocessable();
         $this->get("/api/payroll/periods/{$period['id']}/export")->assertOk()->assertHeader('content-type', 'text/csv; charset=UTF-8');
 
-        $this->actAs('bagus.prasetyo@racik.test');
+        $this->actAs('karyawan3@demo.test');
         $this->getJson("/api/payslips/{$payslip->id}")->assertOk();
         $this->get("/api/payslips/{$payslip->id}/pdf")->assertOk()->assertHeader('content-type', 'application/pdf');
         $this->getJson('/api/payroll/periods')->assertForbidden();
@@ -106,14 +106,14 @@ class HrisFlowTest extends TestCase
 
     public function test_new_employee_gets_sequential_number_from_join_year(): void
     {
-        $this->actAs('dewi.lestari@racik.test');
+        $this->actAs('hr@demo.test');
 
         $payload = fn (string $email) => [
             'email' => $email, 'password' => 'password123', 'role' => 'employee', 'full_name' => 'Calon Baru',
             'position' => 'Staff', 'department' => 'Finance', 'join_date' => '2025-02-03', 'ptkp_status' => 'TK/0', 'basic_salary' => 5_000_000,
         ];
 
-        $this->postJson('/api/employees', $payload('baru1@racik.test'))->assertCreated()->assertJsonPath('data.employee_number', 'RG-2025-001');
-        $this->postJson('/api/employees', $payload('baru2@racik.test'))->assertCreated()->assertJsonPath('data.employee_number', 'RG-2025-002');
+        $this->postJson('/api/employees', $payload('baru1@demo.test'))->assertCreated()->assertJsonPath('data.employee_number', 'EMP-2025-001');
+        $this->postJson('/api/employees', $payload('baru2@demo.test'))->assertCreated()->assertJsonPath('data.employee_number', 'EMP-2025-002');
     }
 }

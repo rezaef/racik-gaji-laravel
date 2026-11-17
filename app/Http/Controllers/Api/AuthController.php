@@ -14,9 +14,9 @@ class AuthController extends Controller
 {
     /** Akun demo untuk presentasi (hanya aktif bila APP_DEMO_SWITCHER=true). */
     private const DEMO_ACCOUNTS = [
-        User::ROLE_HR => 'dewi.lestari@racik.test',
-        User::ROLE_MANAGER => 'syaiful.akbar@racik.test',
-        User::ROLE_EMPLOYEE => 'reza.eka@racik.test',
+        User::ROLE_HR => 'hr@demo.test',
+        User::ROLE_MANAGER => 'manager@demo.test',
+        User::ROLE_EMPLOYEE => 'karyawan1@demo.test',
     ];
 
     public function login(LoginRequest $request): JsonResponse

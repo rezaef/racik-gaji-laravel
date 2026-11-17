@@ -14,16 +14,16 @@ class RequestSeeder extends Seeder
 {
     public function run(): void
     {
-        $manager = Employee::where('full_name', 'Syaiful Akbar')->firstOrFail();
-        $by = fn (string $name) => Employee::where('full_name', 'like', "$name%")->firstOrFail();
+        $manager = Employee::where('full_name', 'Manajer Demo')->firstOrFail();
+        $by = fn (string $name) => Employee::where('full_name', $name)->firstOrFail();
 
         // Cuti/sakit disetujui di dua bulan penuh: [nama, jenis, bulan (1 = bulan lalu, 2 = dua bulan lalu), hari ke-, lama hari kerja, alasan]
         $leaves = [
-            ['Siti', 'annual', 1, 14, 3, 'Acara keluarga di Surabaya'], ['Agus', 'sick', 1, 5, 2, 'Demam dan flu, surat dokter terlampir'],
-            ['Lina', 'annual', 1, 21, 2, 'Mengurus dokumen keluarga'], ['Rizky', 'annual', 1, 9, 1, 'Keperluan pribadi'],
-            ['Maya', 'sick', 1, 17, 1, 'Kontrol dokter'],
-            ['Siti', 'annual', 2, 7, 2, 'Liburan akhir pekan panjang'], ['Nur', 'sick', 2, 14, 1, 'Sakit kepala, istirahat'],
-            ['Putri', 'annual', 2, 20, 3, 'Pernikahan saudara'], ['Hendra', 'annual', 2, 3, 2, 'Mengantar keluarga berobat'],
+            ['Karyawan 6', 'annual', 1, 14, 3, 'Acara keluarga di Surabaya'], ['Karyawan 7', 'sick', 1, 5, 2, 'Demam dan flu, surat dokter terlampir'],
+            ['Karyawan 10', 'annual', 1, 21, 2, 'Mengurus dokumen keluarga'], ['Karyawan 5', 'annual', 1, 9, 1, 'Keperluan pribadi'],
+            ['Karyawan 12', 'sick', 1, 17, 1, 'Kontrol dokter'],
+            ['Karyawan 6', 'annual', 2, 7, 2, 'Liburan akhir pekan panjang'], ['Karyawan 4', 'sick', 2, 14, 1, 'Sakit kepala, istirahat'],
+            ['Karyawan 8', 'annual', 2, 20, 3, 'Pernikahan saudara'], ['Karyawan 9', 'annual', 2, 3, 2, 'Mengantar keluarga berobat'],
         ];
 
         foreach ($leaves as [$name, $type, $monthsAgo, $offset, $length, $reason]) {
@@ -51,20 +51,20 @@ class RequestSeeder extends Seeder
         }
 
         LeaveRequest::create([
-            'employee_id' => $by('Rizky')->id, 'type' => 'sick',
+            'employee_id' => $by('Karyawan 5')->id, 'type' => 'sick',
             'start_date' => now()->addDays(1)->toDateString(), 'end_date' => now()->addDays(2)->toDateString(),
             'days' => 2, 'reason' => 'Demam, surat dokter menyusul', 'status' => 'pending',
         ]);
         LeaveRequest::create([
-            'employee_id' => $by('Nur')->id, 'type' => 'annual',
+            'employee_id' => $by('Karyawan 4')->id, 'type' => 'annual',
             'start_date' => now()->addDays(10)->toDateString(), 'end_date' => now()->addDays(12)->toDateString(),
             'days' => 3, 'reason' => 'Liburan keluarga', 'status' => 'pending',
         ]);
 
         // Lembur disetujui (masuk payroll) di dua bulan: [nama, bulan lalu ke-, hari ke-, jam]. Tidak dibuat pada hari cuti.
         $overtimes = [
-            ['Bagus', 1, 3, 1], ['Agus', 1, 4, 4], ['Bagus', 1, 10, 2], ['Dimas', 1, 11, 3], ['Rizky', 1, 17, 2], ['Putri', 1, 22, 1],
-            ['Bagus', 2, 4, 2], ['Agus', 2, 9, 3], ['Dimas', 2, 15, 2], ['Rizky', 2, 18, 1], ['Nur', 2, 22, 4], ['Siti', 2, 24, 2],
+            ['Karyawan 3', 1, 3, 1], ['Karyawan 7', 1, 4, 4], ['Karyawan 3', 1, 10, 2], ['Karyawan 13', 1, 11, 3], ['Karyawan 5', 1, 17, 2], ['Karyawan 8', 1, 22, 1],
+            ['Karyawan 3', 2, 4, 2], ['Karyawan 7', 2, 9, 3], ['Karyawan 13', 2, 15, 2], ['Karyawan 5', 2, 18, 1], ['Karyawan 4', 2, 22, 4], ['Karyawan 6', 2, 24, 2],
         ];
 
         foreach ($overtimes as [$name, $monthsAgo, $offset, $hours]) {
@@ -84,13 +84,13 @@ class RequestSeeder extends Seeder
             ]);
         }
         OvertimeRequest::create([
-            'employee_id' => $by('Yoga')->id, 'date' => now()->subDay()->toDateString(),
+            'employee_id' => $by('Karyawan 11')->id, 'date' => now()->subDay()->toDateString(),
             'start_time' => '16:00:00', 'end_time' => '19:00:00', 'hours' => 3,
             'reason' => 'Penanganan insiden jaringan klien', 'status' => 'pending',
         ]);
 
         AttendanceCorrection::create([
-            'employee_id' => $by('Putri')->id, 'date' => now()->subDays(3)->toDateString(),
+            'employee_id' => $by('Karyawan 8')->id, 'date' => now()->subDays(3)->toDateString(),
             'mode' => 'WFH', 'clock_in' => '08:05:00', 'clock_out' => '16:10:00',
             'reason' => 'Lupa clock-in karena internet bermasalah',
         ]);

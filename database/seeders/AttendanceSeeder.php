@@ -46,7 +46,7 @@ class AttendanceSeeder extends Seeder
 
         return [
             'mode' => $mode,
-            'client_name' => $mode === 'CLIENT_SITE' ? collect(['PT Petrokimia Gresik', 'PT Semen Indonesia', 'PT Smelting', 'PT Maspion'])->random() : null,
+            'client_name' => $mode === 'CLIENT_SITE' ? collect(['PT Klien Contoh A', 'PT Klien Contoh B', 'PT Klien Contoh C', 'PT Klien Contoh D'])->random() : null,
             'clock_in' => $in->format('H:i:s'),
             'clock_out' => $out->format('H:i:s'),
             'status' => $late > 15 ? 'late' : 'present',
