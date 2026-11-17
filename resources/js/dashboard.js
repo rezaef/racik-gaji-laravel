@@ -118,6 +118,7 @@ async function showLogin(error = '') {
                     <button data-role="${esc(d.role)}" class="demo rounded-lg bg-white px-4 py-2 text-left text-sm ring-1 ring-slate-200 hover:ring-indigo-400">
                         <span class="font-medium">${esc(d.name)}</span> <span class="text-slate-500">· ${ROLES[d.role] ?? esc(d.role)}${d.position ? ' · ' + esc(d.position) : ''}</span>
                     </button>`).join('')}</div></div>` : ''}
+            <p class="mt-10 text-center text-xs text-slate-400">&copy; ${new Date().getFullYear()} Racik Solusi Teknologi &middot; Versi demo</p>
         </main>`;
 
     const done = async (p) => {
@@ -153,7 +154,8 @@ function shell(me, active, content) {
             </div>
         </div>
     </header>
-    <main class="mx-auto max-w-6xl space-y-6 px-4 py-6">${content}</main>`;
+    <main class="mx-auto max-w-6xl space-y-6 px-4 py-6">${content}</main>
+    <footer class="mx-auto max-w-6xl px-4 py-6 text-center text-xs text-slate-400">&copy; ${new Date().getFullYear()} Racik Solusi Teknologi &middot; Versi demo</footer>`;
     document.getElementById('out').onclick = logout;
 }
 

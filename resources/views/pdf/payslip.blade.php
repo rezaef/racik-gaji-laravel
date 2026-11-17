@@ -85,6 +85,6 @@
         </tr>
     </table>
 
-    <p class="foot">Dokumen ini dihasilkan otomatis oleh RacikHRIS dan bersifat rahasia.</p>
+    <p class="foot">Dokumen ini dihasilkan otomatis oleh sistem Manajemen Gaji · Racik Solusi Teknologi dan bersifat rahasia.</p>
 </body>
 </html>
