@@ -104,7 +104,7 @@ async function showLogin(error = '') {
     try { demos = (await api('auth/demo-accounts')).data.filter((d) => d.role === 'hr_admin'); } catch {}
     $app.innerHTML = `
         <main class="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4 py-10">
-            <h1 class="text-3xl font-semibold tracking-tight">Racik Gaji</h1>
+            <h1 class="text-3xl font-semibold tracking-tight">Manajemen Gaji</h1>
             <p class="mt-1 mb-6 text-slate-500">Manajemen gaji karyawan untuk Admin &amp; HR.</p>
             ${card('', `
                 <form id="login" class="space-y-3">
@@ -142,7 +142,10 @@ function shell(me, active, content) {
     $app.innerHTML = `
     <header class="border-b border-slate-200 bg-white">
         <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-            <div class="font-semibold">Racik Gaji <span class="ml-1 hidden text-xs font-normal text-slate-400 sm:inline">Admin HR</span></div>
+            <div class="flex items-center gap-2.5">
+                <span class="flex size-8 items-center justify-center rounded-lg bg-indigo-600 text-sm font-bold text-white">M</span>
+                <span class="leading-tight"><span class="block text-sm font-semibold tracking-tight">Manajemen Gaji</span><span class="block text-[11px] text-slate-400">Portal Admin &amp; HR</span></span>
+            </div>
             <nav class="flex gap-1 text-sm">${NAV.map(([h, l]) => `<a href="${h}" class="rounded-lg px-3 py-1.5 ${h === active ? 'bg-indigo-50 font-medium text-indigo-700' : 'text-slate-600 hover:bg-slate-100'}">${l}</a>`).join('')}</nav>
             <div class="flex items-center gap-3 text-sm">
                 <span class="hidden md:inline text-slate-500">${esc(me.name)}</span>
