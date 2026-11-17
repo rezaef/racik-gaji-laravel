@@ -18,6 +18,12 @@ Route::prefix('auth')->group(function () {
     Route::post('demo-login', [AuthController::class, 'demoLogin']);
 });
 
+// Integrasi server-ke-server dengan aplikasi absensi (absensi-laravel).
+Route::middleware('integration')->prefix('integration')->group(function () {
+    Route::get('employees', [\App\Http\Controllers\Api\IntegrationController::class, 'employees']);
+    Route::post('attendances', [\App\Http\Controllers\Api\IntegrationController::class, 'attendances']);
+});
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('auth/me', [AuthController::class, 'me']);
     Route::post('auth/logout', [AuthController::class, 'logout']);
